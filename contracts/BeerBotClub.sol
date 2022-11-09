@@ -9,16 +9,18 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "./Base64.sol";
 import "./BotSelector.sol";
+import "./SelfPausable.sol";
 
-contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, Pausable, BotSelector, PaymentSplitter  {
+contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSelector, PaymentSplitter  {
     using Counters for Counters.Counter;
     using Strings for uint256;
 
     Counters.Counter private _idCounter;
     
     bool private pausedByContract;
+
+    bool private onlyWhitelisteds;
 
     uint256 public maxSupply;
 
@@ -27,6 +29,8 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, Pausab
     address public royaltysAddress;
 
     uint16 public royaltyPercentage;
+
+    string private _customBaseUri;
 
     struct RoyaltyReceiver {
         address splitter;
@@ -37,7 +41,8 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, Pausab
 
     uint16[] private _randomNumbers;
 
-    string private _customBaseUri;
+    mapping(address => uint8) public availableMintsForWhitelisteds;
+
 
     constructor(uint16 _maxSupply, 
                 uint256 _fundsRequired, 
@@ -45,16 +50,17 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, Pausab
                 uint16 _royaltyPercentage, 
                 address[] memory _payees, 
                 uint256[] memory  _shares) 
-                ERC721("BmBots", "BMBOTS") 
+                ERC721("BeerBot", "BBCLUB") 
                 PaymentSplitter(_payees, _shares)
                 payable
                 {
-                    pausedByContract = false;
+                    pausedByContract = true;
+                    onlyWhitelisteds = true;
                     maxSupply = _maxSupply;
                     fundsRequired = _fundsRequired;
                     royaltysAddress = _royaltysAddress;
                     royaltyPercentage = _royaltyPercentage;
-                    _customBaseUri = "https://bmbot.io/bmbots/";
+                    _customBaseUri = "https://api.beerbot.club/";
                     for(uint16 i = 0; i < _maxSupply; i++) {
                         _randomNumbers.push(i);
                     }
@@ -106,35 +112,24 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, Pausab
             return royaltysAddress;
         }
 
-    function getCurrentNumberOfBots()
+    // pause logic
+
+    function pauseByOwner()
         public
-        view
-        returns (uint256 numberOfBots)
+        onlyOwner
         {
-            return _idCounter.current();
-        }
-
-    function pause() 
-        public 
-        onlyOwner 
-        {
-            _pause();
-        }
-
-    function unpause() 
-        public 
-        onlyOwner 
-        {
-            _unpause();
+            bool pauseStatus = isPausedByContract();
+            require(pauseStatus == false, "BeerBotClub: contract is already paused");
+            pausedByContract = !pausedByContract;
         }
 
     function pauseByContract()
-        internal
+        internal        
         {
             pausedByContract = !pausedByContract;
         }
 
-    function unpauseContract()
+    function unpauseByContract()
         public
         onlyOwner
         {
@@ -151,20 +146,58 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, Pausab
             return pausedByContract;
         }
 
+    // White list logic
 
-    function mint() 
+    function unableWhiteListMode()
         public
-        payable
+        onlyOwner
         {
-            uint256 current = _idCounter.current();            
-            require(!isPausedByContract(), "BmClub: minting is paused");            
-            require(current < maxSupply, "No BmBots left :(");
-            require(msg.value >= fundsRequired,"you need more MATIC to mint the BmBots");
-            //--------------------------------------------------------------------------
+            bool whiteListModeStatus = isWhileListMode();
+            require(whiteListModeStatus == true, "BeerBotClub: whiteListMode is NOT active");
+            onlyWhitelisteds = !onlyWhitelisteds;
+        }
+    
+    function isWhileListMode()
+        public
+        view
+        returns (bool)
+    {
+        return onlyWhitelisteds;
+    }    
+
+    function setWhiteListedAddresses(address[] memory _whiteListeds)
+        public
+        onlyOwner
+        {
+            for(uint16 i = 0; i < _whiteListeds.length; i++) {
+                availableMintsForWhitelisteds[_whiteListeds[i]] = 5;
+            }
+        }
+
+    function addressIsWhiteListed(address _walletAddress)
+        public
+        view
+        returns (bool)                
+    {
+        if (isWhileListMode() && availableMintsForWhitelisteds[_walletAddress] != 0 && availableMintsForWhitelisteds[_walletAddress] <= 5){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // Mint logic
+
+    function actualMint(uint256 _current ) 
+        internal
+        {
+            uint256 modBy;
+            uint256 randomBotId;            
+            uint256 resultNumber;
             // generate a random bot id
-            uint256 modBy = _randomNumbers.length;
-            uint256 randomBotId = getRandomBotId(maxSupply, current, msg.sender, modBy);            
-            uint256 resultNumber = _randomNumbers[randomBotId];
+            modBy = _randomNumbers.length;
+            randomBotId = getRandomBotId(maxSupply, _current, msg.sender, modBy);            
+            resultNumber = _randomNumbers[randomBotId];
             _randomNumbers[randomBotId] = _randomNumbers[_randomNumbers.length - 1];            
             _randomNumbers.pop();
             // // Set Royalties
@@ -175,15 +208,34 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, Pausab
             // mint the ramdon bot
             _safeMint(msg.sender, resultNumber);
             _idCounter.increment();
-            //--------------------------------------------------------------------------
             // pause minting logic
             // 1332, 2665, 3998
-            if (_idCounter.current() == 1332){
+            if (_idCounter.current() == 1332 && !isPausedByContract()){
                 pauseByContract();
             }
-            if (_idCounter.current() == 2665){
+            if (_idCounter.current() == 2665 && !isPausedByContract()){
                 pauseByContract();
             }
+        }
+    
+
+    function mint() 
+        public
+        payable
+        {
+            uint256 current;
+            require(!isPausedByContract(), "BeerBotClub: minting is paused");
+            current = _idCounter.current();           
+            require(current < maxSupply, "BeerBotClub: BEERBOTS SOLD OUT!");
+            require(msg.value >= fundsRequired,"BeerBotClub: You need more funds to mint more BeerBots");
+            // whiteList minting
+            if (onlyWhitelisteds == true){
+                require((availableMintsForWhitelisteds[msg.sender] != 0 && availableMintsForWhitelisteds[msg.sender] <= 5), "You are not whitelisted, wait for the whitelist mode to end");
+                actualMint(current);
+                availableMintsForWhitelisteds[msg.sender]--;                
+            }
+            // normal minting
+            actualMint(current);
         }
 
     function tokenURI(uint256 tokenId) 
@@ -196,16 +248,15 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, Pausab
             require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
             string memory baseURI = _baseURI();
-            string memory jsonURI = Base64.encode(abi.encodePacked(baseURI, tokenId.toString()));
-
-            return string(abi.encodePacked("data:application/json;base64,", jsonURI));
+            return string(abi.encodePacked(baseURI, tokenId.toString()));            
         }
+
+        
 
     function withdraw() 
         public 
         payable
-        onlyOwner
-        whenNotPaused
+        onlyOwner        
         {
             (bool sent, ) = payable(msg.sender).call{value: address(this).balance}("");
             require(sent, "Withdraw failed");

@@ -1,6 +1,6 @@
 require('dotenv').config()
 require("@nomiclabs/hardhat-waffle");
-
+//require("@nomiclabs/hardhat-etherscan");
 //require("@nomicfoundation/hardhat-toolbox");
 
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -22,6 +22,20 @@ module.exports = {
       accounts: [
         process.env.polygon_mumbai_account
       ]
-    }
+    },
+    bsc_testnet: {      
+      url: "https://data-seed-prebsc-1-s3.binance.org:8545",
+      chainId: 97,
+      accounts: [
+        process.env.bsc_testnet_account
+      ]
+    }//,
+    // bsc_mainnet: {
+    //   url: "https://bsc-dataseed.binance.org/",      
+    //   chainId: 56,      
+    //   accounts: [
+    //     process.env.bsc_mainnet_account
+    //   ]
+    // }
   }
 };
