@@ -67,14 +67,14 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
                 }
 
     function setBaseURI (string memory customBaseUri_) 
-        public 
+        external 
         onlyOwner
         {
             _customBaseUri = customBaseUri_;
         }
 
     function publicURI()
-        public
+        external
         view
         returns (string memory)
         {
@@ -91,13 +91,13 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
         }
 
     function setRequiredFunds(uint256 _newFundsRequired)
-        public        
+        external        
         onlyOwner{
             fundsRequired = _newFundsRequired;
         }
 
     function getRequiredFunds()
-        public
+        external
         view
         returns (uint256 requiredfunds)
         {
@@ -114,23 +114,22 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
 
     // pause logic
 
-    function pauseByOwner()
-        public
-        onlyOwner
+    function pauseByContract()
+        internal
         {
-            bool pauseStatus = isPausedByContract();
-            require(pauseStatus == false, "BeerBotClub: contract is already paused");
             pausedByContract = !pausedByContract;
         }
 
-    function pauseByContract()
-        internal        
-        {
+    function changePauseStatus()
+        external
+        onlyOwner
+        {            
             pausedByContract = !pausedByContract;
         }
+
 
     function unpauseByContract()
-        public
+        external
         onlyOwner
         {
             bool pauseStatus = isPausedByContract();
@@ -149,7 +148,7 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
     // White list logic
 
     function unableWhiteListMode()
-        public
+        external
         onlyOwner
         {
             bool whiteListModeStatus = isWhileListMode();
@@ -166,11 +165,11 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
     }    
 
     function setWhiteListedAddresses(address[] memory _whiteListeds)
-        public
+        external
         onlyOwner
         {
             for(uint16 i = 0; i < _whiteListeds.length; i++) {
-                availableMintsForWhitelisteds[_whiteListeds[i]] = 5;
+                availableMintsForWhitelisteds[_whiteListeds[i]] = 1;
             }
         }
 
@@ -179,11 +178,7 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
         view
         returns (bool)                
     {
-        if (isWhileListMode() && availableMintsForWhitelisteds[_walletAddress] != 0 && availableMintsForWhitelisteds[_walletAddress] <= 5){
-            return true;
-        } else {
-            return false;
-        }
+        return isWhileListMode() && availableMintsForWhitelisteds[_walletAddress] == 1 ? true : false;   
     }
 
     // Mint logic
@@ -210,12 +205,9 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
             _idCounter.increment();
             // pause minting logic
             // 1332, 2665, 3998
-            if (_idCounter.current() == 1332 && !isPausedByContract()){
+            if ((_idCounter.current() == 1332 || _idCounter.current() == 2665) && !isPausedByContract()){
                 pauseByContract();
-            }
-            if (_idCounter.current() == 2665 && !isPausedByContract()){
-                pauseByContract();
-            }
+            }            
         }
     
 
@@ -230,9 +222,8 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
             require(msg.value >= fundsRequired,"BeerBotClub: You need more funds to mint more BeerBots");
             // whiteList minting
             if (onlyWhitelisteds == true){
-                require((availableMintsForWhitelisteds[msg.sender] != 0 && availableMintsForWhitelisteds[msg.sender] <= 5), "You are not whitelisted, wait for the whitelist mode to end");
-                actualMint(current);
-                availableMintsForWhitelisteds[msg.sender]--;                
+                require(addressIsWhiteListed(msg.sender), "You are not whitelisted, wait for the whitelist mode to end");
+                actualMint(current);                
             }
             // normal minting
             actualMint(current);

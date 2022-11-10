@@ -226,7 +226,7 @@ describe("BeerBotClub Collection", () => {
             });
 
             // pause again
-            await deplyedBeerBotClub.connect(creator).pauseByContract()
+            await deplyedBeerBotClub.connect(creator).changePauseStatus()
             pauseStatus = await deplyedBeerBotClub.connect(creator).isPausedByContract()
             expect(pauseStatus).to.equal(true);
 
@@ -284,7 +284,7 @@ describe("BeerBotClub Collection", () => {
             expect(pauseStatus).to.equal(false);
 
             // Whitelisted addresses CAN mint while pause status is false
-            // Same addresses can mint up to five times in this situation
+            // Same addresses can mint five times or even more
             await Promise.all([              
                 deplyedBeerBotClub.connect(whiteListeOne).mint({
                     from: whiteListeOne.address,
@@ -307,12 +307,6 @@ describe("BeerBotClub Collection", () => {
                     value: ethers.utils.parseEther('20'),
                 }),
             ]);
-
-            // Minting one more time with the same address should be reverted
-            await expect(deplyedBeerBotClub.connect(whiteListeOne).mint({
-                from: whiteListeOne.address,
-                value: ethers.utils.parseEther('20'),
-            })).to.be.revertedWith("You are not whitelisted, wait for the whitelist mode to end");
 
         });
 
@@ -363,21 +357,21 @@ describe("BeerBotClub Collection", () => {
             // unable whitelist mode
             await deplyedBeerBotClub.connect(creator).unableWhiteListMode()
 
-            //check the original amount
+            // check the original amount
             originalAmount = await deplyedBeerBotClub.connect(creator).getRequiredFunds();
-            // await deplyedBeerBotClub.connect(creator).setRequiredFunds(20000000000000000000n);
-            let whiteListeTwoStartBalance = await provider.getBalance(holders.address);
-            console.log(whiteListeTwoStartBalance)
-            const weiValue = 20000000000000000000n;
-            const ethValue = ethers.utils.formatEther(weiValue);            
-            console.log(ethers.utils.parseEther('20'))
-            console.log("the bnb value is: "+ethValue)
-            console.log("The valid amoutn in testnet contract starts from: "+ethers.utils.formatEther(20))
-            console.log("then we changed to: "+ethers.utils.formatEther(3000000))
-            console.log("and it should be : "+ethers.utils.formatEther(10000000000000000n))
             await expect(originalAmount).to.eq(ethers.utils.parseEther('20'));
-            
-            // mint the required funds
+
+            // let whiteListeTwoStartBalance = await provider.getBalance(holders.address);
+            // console.log(whiteListeTwoStartBalance)
+            // const weiValue = 20000000000000000000n;
+            // const ethValue = ethers.utils.formatEther(weiValue);            
+            // console.log(ethers.utils.parseEther('20'))
+            // console.log("the bnb value is: "+ethValue)
+            // console.log("The valid amoutn in testnet contract starts from: "+ethers.utils.formatEther(20))
+            // console.log("then we changed to: "+ethers.utils.formatEther(3000000))
+            // console.log("and it should be : "+ethers.utils.formatEther(10000000000000000n))
+                        
+            // mint the with required funds
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint({
                 from: someDudeOne.address,
                 value: ethers.utils.parseEther('20'),
@@ -389,230 +383,291 @@ describe("BeerBotClub Collection", () => {
                 value: ethers.utils.parseEther('10'),
             })).to.be.revertedWith("BeerBotClub: You need more funds to mint more BeerBots");
 
-            // Try to mint with more of the required funds
+            // change the required amount, only owner can do this
+            // await expect(deplyedBeerBotClub.connect(somdeDudeTwo).setRequiredFunds(35000000000000000000n)).to.be.revertedWith("Ownable: caller is not the owner" ); 
+            // await deplyedBeerBotClub.connect(creator).setRequiredFunds(20000000000000000000n);
+            await expect(deplyedBeerBotClub.connect(somdeDudeTwo).setRequiredFunds(ethers.utils.parseEther('30'))).to.be.revertedWith("Ownable: caller is not the owner" );
+            await deplyedBeerBotClub.connect(creator).setRequiredFunds(ethers.utils.parseEther('30'));
+            newAmount = await deplyedBeerBotClub.connect(creator).getRequiredFunds();
+            await expect(newAmount).to.eq(ethers.utils.parseEther('30'));
+
+            // Try to mint with less of the required funds AGAIN
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint({
                 from: someDudeOne.address,
-                value: ethers.utils.parseEther('300'),
+                value: ethers.utils.parseEther('10'),
             })).to.be.revertedWith("BeerBotClub: You need more funds to mint more BeerBots");
 
-            
-            //await expect(deplyedBeerBotClub.connect(creator).getRequiredFunds()).to.eq(ethers.utils.parseEther('30'));
-            // // Try to mint with insuficent funds
-            // await expect(deplyedBeerBotClub.connect(creator).mint({
-            //     from: creator.address,
-            //     value: ethers.utils.parseEther('20'),
-            // })).to.be.revertedWith("you need more BNB to mint the BeerBots");
+            // mint the with required funds
+            await expect(deplyedBeerBotClub.connect(someDudeOne).mint({
+                from: someDudeOne.address,
+                value: ethers.utils.parseEther('30'),
+            }))
+
         });
-      
-        // it("Only the creator can change the needed amout of MATIC", async () => {
-        // const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
-    
-        // await expect(deplyedBeerBotClub.connect(somdeDudeTwo).setRequiredFunds(35000000000000000000n)).to.be.revertedWith("Ownable: caller is not the owner" );
-        // });
 
     });
     
-//     describe("customBaseURI...", () => {
-//         it("The original baseURI is correct", async () => {
-//             const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
-            
-//             await deplyedBeerBotClub.mint({
-//                 from: creator.address,
-//                 value: ethers.utils.parseEther('20'),
-//             });
+    describe("customBaseURI...", () => {
+        it("The original baseURI is correct", async () => {            
+            const { 
+                creator, 
+                leadDude, 
+                artirstDude, 
+                devDude, 
+                someDudeOne, 
+                somdeDudeTwo, 
+                holders, 
+                project, 
+                whiteListeOne,  
+                whiteListeTwo, 
+                deplyedBeerBotClub 
+            } = await setuprBeerBotClub({ });            
     
-//             const baseURI = await deplyedBeerBotClub.publicURI();
-//             // const stringifiedTokenURI = await tokenURI.toString();
-//             const expectedBaseURI = "https://bmbot.io/bmbots/";
+            const baseURI = await deplyedBeerBotClub.publicURI();
+            // const stringifiedTokenURI = await tokenURI.toString();
+            const expectedBaseURI = "https://api.beerbot.club/";
             
-//             expect(expectedBaseURI).to.equal(baseURI);
-//         });
+            expect(expectedBaseURI).to.equal(baseURI);
+        });
     
-//         it("BaseURI can change", async () => {
-//             const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
+        it("BaseURI can change and only owner can change it", async () => {
+            const { 
+                creator, 
+                leadDude, 
+                artirstDude, 
+                devDude, 
+                someDudeOne, 
+                somdeDudeTwo, 
+                holders, 
+                project, 
+                whiteListeOne,  
+                whiteListeTwo, 
+                deplyedBeerBotClub 
+            } = await setuprBeerBotClub({ });
             
-//             await deplyedBeerBotClub.mint({
-//                 from: creator.address,
-//                 value: ethers.utils.parseEther('20'),
-//             });
+            // Checl original base uri
+            const baseURI = await deplyedBeerBotClub.publicURI();
+            const expectedBaseURI = "https://api.beerbot.club/";          
+            expect(expectedBaseURI).to.equal(baseURI);
+
+            // Only owner can changes the uri
+            await expect(deplyedBeerBotClub.connect(somdeDudeTwo).setBaseURI("https://someDudeOneURI/")).to.be.revertedWith('Ownable: caller is not the owner');
+
+            // Change the uri        
+            await deplyedBeerBotClub.connect(creator).setBaseURI("ipfs://someIpfsKey/bmbots/")
+            const newBaseURI = await deplyedBeerBotClub.publicURI();
+            const expectedNewBaseURI = "ipfs://someIpfsKey/bmbots/";
+            
+            expect(expectedNewBaseURI).to.equal(newBaseURI);
+        });
     
-//             const baseURI = await deplyedBeerBotClub.publicURI();
-//             const expectedBaseURI = "https://bmbot.io/bmbots/";
-            
-//             expect(expectedBaseURI).to.equal(baseURI);
-        
-//             await deplyedBeerBotClub.setBaseURI("ipfs://someIpfsKey/bmbots/")
-//             const newBaseURI = await deplyedBeerBotClub.publicURI();
-//             const expectedNewBaseURI = "ipfs://someIpfsKey/bmbots/";
-            
-//             expect(expectedNewBaseURI).to.equal(newBaseURI);
-//         });
-    
-//         it ("Only creator can change baseURI", async () => {
-//             const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
-        
-//             const baseURI = await deplyedBeerBotClub.publicURI();
-//             const expectedBaseURI = "https://bmbot.io/bmbots/";
-            
-//             expect(expectedBaseURI).to.equal(baseURI);
-        
-//             await expect(deplyedBeerBotClub.connect(somdeDudeTwo).setBaseURI("https://someDudeOneURI/")).to.be.revertedWith("Ownable: caller is not the owner" );
-//         });
-//       });
+      });
 
-//     describe("Mint Economics...", async () => {
-//         it("Only creator splits the bmclub contract balance", async () => {
-//             const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
+    describe("Mint Economics...", async () => {
+        it("Only creator splits the bmclub contract balance", async () => {
+            const { 
+                creator, 
+                leadDude, 
+                artirstDude, 
+                devDude, 
+                someDudeOne, 
+                somdeDudeTwo, 
+                holders, 
+                project, 
+                whiteListeOne,  
+                whiteListeTwo, 
+                deplyedBeerBotClub 
+            } = await setuprBeerBotClub({ });
+            // unpause contract
+            await deplyedBeerBotClub.connect(creator).unpauseByContract()
 
-//             const provider = ethers.provider;
+            // unable whitelist mode
+            await deplyedBeerBotClub.connect(creator).unableWhiteListMode()
 
-//             let creatorStartBalance = await provider.getBalance(creator.address);
-//             let leadStartBalance = await provider.getBalance(leadDude.address);
-//             let artistStartBalance = await provider.getBalance(artirstDude.address);
-//             let devStartBalance = await provider.getBalance(devDude.address);
-//             let holdersStartBalance = await provider.getBalance(holders.address);
-//             let projectStartBalance = await provider.getBalance(project.address);
+            const provider = ethers.provider;
 
-//             // console.log("creatorBalance... "+creatorStartBalance);
-//             // console.log("leadBalance... "+leadStartBalance);
-//             // console.log("artistBalance... "+artistStartBalance);
-//             // console.log("devBalance... "+devStartBalance);
-//             // console.log("holdersBalance... "+holdersStartBalance);
-//             // console.log("projectBalance... "+projectStartBalance);
+            let creatorStartBalance = await provider.getBalance(creator.address);
+            let leadStartBalance = await provider.getBalance(leadDude.address);
+            let artistStartBalance = await provider.getBalance(artirstDude.address);
+            let devStartBalance = await provider.getBalance(devDude.address);
+            let holdersStartBalance = await provider.getBalance(holders.address);
+            let projectStartBalance = await provider.getBalance(project.address);
+
+            // console.log("creatorBalance... "+creatorStartBalance);
+            // console.log("leadBalance... "+leadStartBalance);
+            // console.log("artistBalance... "+artistStartBalance);
+            // console.log("devBalance... "+devStartBalance);
+            // console.log("holdersBalance... "+holdersStartBalance);
+            // console.log("projectBalance... "+projectStartBalance);
       
-//             await Promise.all([
-//                 deplyedBeerBotClub.connect(somdeDudeTwo).mint({
-//                   from: somdeDudeTwo.address,
-//                   value: ethers.utils.parseEther('20'),
-//                 }), 
-//                 deplyedBeerBotClub.connect(somdeDudeTwo).mint({
-//                   from: somdeDudeTwo.address,
-//                   value: ethers.utils.parseEther('20'),
-//                 })
-//             ]);
+            await Promise.all([
+                deplyedBeerBotClub.connect(somdeDudeTwo).mint({
+                  from: somdeDudeTwo.address,
+                  value: ethers.utils.parseEther('20'),
+                }), 
+                deplyedBeerBotClub.connect(somdeDudeTwo).mint({
+                  from: somdeDudeTwo.address,
+                  value: ethers.utils.parseEther('20'),
+                })
+            ]);
             
-//             let contractBalance = await provider.getBalance(deplyedBeerBotClub.address);
-//             const holderShare = contractBalance.mul(ethers.utils.parseEther('75')).div(ethers.utils.parseEther('100'));
-//             const projectShare = contractBalance.mul(ethers.utils.parseEther('10')).div(ethers.utils.parseEther('100'));
-//             const leadShare = contractBalance.mul(ethers.utils.parseEther('5')).div(ethers.utils.parseEther('100'));
-//             const devShare = contractBalance.mul(ethers.utils.parseEther('3')).div(ethers.utils.parseEther('100'));
-//             const creatorShare = contractBalance.mul(ethers.utils.parseEther('7')).div(ethers.utils.parseEther('100'));
+            let contractBalance = await provider.getBalance(deplyedBeerBotClub.address);
+            const holderShare = contractBalance.mul(ethers.utils.parseEther('75')).div(ethers.utils.parseEther('100'));
+            const projectShare = contractBalance.mul(ethers.utils.parseEther('10')).div(ethers.utils.parseEther('100'));
+            const leadShare = contractBalance.mul(ethers.utils.parseEther('5')).div(ethers.utils.parseEther('100'));
+            const devShare = contractBalance.mul(ethers.utils.parseEther('3')).div(ethers.utils.parseEther('100'));
+            const creatorShare = contractBalance.mul(ethers.utils.parseEther('7')).div(ethers.utils.parseEther('100'));
             
-//             // console.log("contrac balance... " + contractBalance);
-//             // console.log("creatorShare... " + holderShare);
-//             // console.log("projectShare... " + projectShare);
-//             // console.log("leadShare... " + leadShare);
-//             // console.log("devShare... " + devShare);
-//             // console.log("creatorShare... " + creatorShare);
-//             // console.log("...")
+            // console.log("contrac balance... " + contractBalance);
+            // console.log("creatorShare... " + holderShare);
+            // console.log("projectShare... " + projectShare);
+            // console.log("leadShare... " + leadShare);
+            // console.log("devShare... " + devShare);
+            // console.log("creatorShare... " + creatorShare);
+            // console.log("...")
 
-//             await expect(deplyedBeerBotClub.connect(someDudeOne)["release(address)"](holders.address)).to.be.revertedWith("Ownable: caller is not the owner" );
-//             let tx = await deplyedBeerBotClub.connect(creator)["release(address)"](holders.address);
-//             let receipt = await tx.wait();
-//             let gasSpent = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+            await expect(deplyedBeerBotClub.connect(someDudeOne)["release(address)"](holders.address)).to.be.revertedWith("Ownable: caller is not the owner" );
+            let tx = await deplyedBeerBotClub.connect(creator)["release(address)"](holders.address);
+            let receipt = await tx.wait();
+            let gasSpent = receipt.gasUsed.mul(receipt.effectiveGasPrice);
 
-//             tx = await deplyedBeerBotClub.connect(creator)["release(address)"](project.address);
-//             receipt = await tx.wait();
-//             gasSpent = gasSpent.add(receipt.gasUsed.mul(receipt.effectiveGasPrice));
+            tx = await deplyedBeerBotClub.connect(creator)["release(address)"](project.address);
+            receipt = await tx.wait();
+            gasSpent = gasSpent.add(receipt.gasUsed.mul(receipt.effectiveGasPrice));
 
-//             tx = await deplyedBeerBotClub.connect(creator)["release(address)"](leadDude.address);
-//             receipt = await tx.wait();
-//             gasSpent = gasSpent.add(receipt.gasUsed.mul(receipt.effectiveGasPrice));
+            tx = await deplyedBeerBotClub.connect(creator)["release(address)"](leadDude.address);
+            receipt = await tx.wait();
+            gasSpent = gasSpent.add(receipt.gasUsed.mul(receipt.effectiveGasPrice));
             
-//             tx = await deplyedBeerBotClub.connect(creator)["release(address)"](devDude.address);
-//             receipt = await tx.wait();
-//             gasSpent = gasSpent.add(receipt.gasUsed.mul(receipt.effectiveGasPrice));
+            tx = await deplyedBeerBotClub.connect(creator)["release(address)"](devDude.address);
+            receipt = await tx.wait();
+            gasSpent = gasSpent.add(receipt.gasUsed.mul(receipt.effectiveGasPrice));
 
-//             tx = await deplyedBeerBotClub.connect(creator)["release(address)"](creator.address);
-//             receipt = await tx.wait();
-//             gasSpent = gasSpent.add(receipt.gasUsed.mul(receipt.effectiveGasPrice));
+            tx = await deplyedBeerBotClub.connect(creator)["release(address)"](creator.address);
+            receipt = await tx.wait();
+            gasSpent = gasSpent.add(receipt.gasUsed.mul(receipt.effectiveGasPrice));
             
-//             contractBalance = await provider.getBalance(deplyedBeerBotClub.address);
-//             let creatorBalance = await provider.getBalance(creator.address);
-//             let leadBalance = await provider.getBalance(leadDude.address);
-//             let artistBalance = await provider.getBalance(artirstDude.address);
-//             let devBalance = await provider.getBalance(devDude.address);
-//             let holdersBalance = await provider.getBalance(holders.address);
-//             let projectBalance = await provider.getBalance(project.address);
+            contractBalance = await provider.getBalance(deplyedBeerBotClub.address);
+            let creatorBalance = await provider.getBalance(creator.address);
+            let leadBalance = await provider.getBalance(leadDude.address);
+            let artistBalance = await provider.getBalance(artirstDude.address);
+            let devBalance = await provider.getBalance(devDude.address);
+            let holdersBalance = await provider.getBalance(holders.address);
+            let projectBalance = await provider.getBalance(project.address);
 
-//             // console.log("contrac balance... " + contractBalance);
-//             // console.log("creatorBalance... "+creatorBalance);
-//             // console.log("leadBalance... "+leadBalance);
-//             // console.log("artistBalance... "+artistBalance);
-//             // console.log("devBalance... "+devBalance);
-//             // console.log("holdersBalance... "+holdersBalance);
-//             // console.log("projectBalance... "+projectBalance);
+            // console.log("contrac balance... " + contractBalance);
+            // console.log("creatorBalance... "+creatorBalance);
+            // console.log("leadBalance... "+leadBalance);
+            // console.log("artistBalance... "+artistBalance);
+            // console.log("devBalance... "+devBalance);
+            // console.log("holdersBalance... "+holdersBalance);
+            // console.log("projectBalance... "+projectBalance);
 
-//             expect(await contractBalance).to.eq(ethers.utils.parseEther('0'));
-//             expect(await leadBalance).to.eq(leadStartBalance.add(leadShare));
-//             expect(await devBalance).to.eq(devStartBalance.add(devShare));
-//             expect(await projectBalance).to.eq(projectStartBalance.add(projectShare));
-//             expect(await holdersBalance).to.eq(holdersStartBalance.add(holderShare));
-//             expect(await creatorBalance).to.eq(creatorStartBalance.add(creatorShare).sub(gasSpent));
+            expect(await contractBalance).to.eq(ethers.utils.parseEther('0'));
+            expect(await leadBalance).to.eq(leadStartBalance.add(leadShare));
+            expect(await devBalance).to.eq(devStartBalance.add(devShare));
+            expect(await projectBalance).to.eq(projectStartBalance.add(projectShare));
+            expect(await holdersBalance).to.eq(holdersStartBalance.add(holderShare));
+            expect(await creatorBalance).to.eq(creatorStartBalance.add(creatorShare).sub(gasSpent));
 
-//         });
-//     });
+        });
+    });
 
-//     describe("Royalties...", async () => {
-//         it("Should support the ERC721 and ERC2981 standards", async () => {
-//             const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
-//             const ERC721InterfaceId = "0x80ac58cd";
-//             const ERC2981InterfaceId = "0x2a55205a";
-//             var isERC721 = await deplyedBeerBotClub.supportsInterface(ERC721InterfaceId);
-//             var isER2981 = await deplyedBeerBotClub.supportsInterface(ERC2981InterfaceId); 
-//             expect(isERC721).to.equal(true);
-//             expect(isER2981).to.equal(true);
-//         });
-    
-//         it("Should return the correct royalty info", async () => {
-//             const SplitterContractAddress = "0x9E545E3C0baAB3E08CdfD552C960A1050f373042";
-//             const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deplyedBeerBotClub } = await setuprBeerBotClub({ SplitterContractAddress });
-//             // console.log(deployedSplitter.address);
-//             const tx = await deplyedBeerBotClub.connect(creator).mint({ from: creator.address, value: ethers.utils.parseEther('20') });
-//             let receipt = await tx.wait();
-//             info = receipt.logs[0]
-//             let tokenMintedId = parseInt(Number(info.topics[3]))
-//             const tokenCeroRoyaltyInfo = await deplyedBeerBotClub.royaltyInfo(tokenMintedId, 100);
-            
-//             expect(tokenCeroRoyaltyInfo[0]).to.equal(SplitterContractAddress);
-//             expect(tokenCeroRoyaltyInfo[1].toNumber()).to.equal(7)
+    describe("Royalties...", async () => {
+        it("Should support the ERC721 and ERC2981 standards and tokens should return the correct royalty info", async () => {
+            const { 
+                creator, 
+                leadDude, 
+                artirstDude, 
+                devDude, 
+                someDudeOne, 
+                somdeDudeTwo, 
+                holders, 
+                project, 
+                whiteListeOne,  
+                whiteListeTwo, 
+                deplyedBeerBotClub 
+            } = await setuprBeerBotClub({ });
+            // unpause contract
+            await deplyedBeerBotClub.connect(creator).unpauseByContract()
 
-//         });
+            // unable whitelist mode
+            await deplyedBeerBotClub.connect(creator).unableWhiteListMode()
 
-//     });
+            //
+            const ERC721InterfaceId = "0x80ac58cd";
+            const ERC2981InterfaceId = "0x2a55205a";
+            var isERC721 = await deplyedBeerBotClub.supportsInterface(ERC721InterfaceId);
+            var isER2981 = await deplyedBeerBotClub.supportsInterface(ERC2981InterfaceId); 
+            expect(isERC721).to.equal(true);
+            expect(isER2981).to.equal(true);
 
-//     describe("Withdraws...", async () => {
-//         it("Withdraws the correct balance to the correct address", async () => {
-//         const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
-          
-//           await Promise.all([
-//             deplyedBeerBotClub.connect(someDudeOne).mint({
-//               from: someDudeOne.address,
-//               value: ethers.utils.parseEther('20'),
-//             }), 
-//             deplyedBeerBotClub.connect(someDudeOne).mint({
-//               from: someDudeOne.address,
-//               value: ethers.utils.parseEther('20'),
-//             })
-//           ]);
-    
-//           const provider = ethers.provider;
-//           let balanceStart = await provider.getBalance(creator.address);
-//           const tx = await deplyedBeerBotClub.connect(creator).withdraw();
-//           const receipt = await tx.wait();
-//           const gasSpent = receipt.gasUsed.mul(receipt.effectiveGasPrice);
-//           expectedBalance = balanceStart.add(ethers.utils.parseEther('40'));
-//           expect(await creator.getBalance()).to.eq(expectedBalance.sub(gasSpent));
-    
-//         });
+            //
+            const SplitterContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";            
+            const tx = await deplyedBeerBotClub.connect(someDudeOne).mint({
+                from: someDudeOne.address,
+                value: ethers.utils.parseEther('20'),
+            });
+            let receipt = await tx.wait();
+            info = receipt.logs[0]
+            let tokenMintedId = parseInt(Number(info.topics[3]))
+            const tokenCeroRoyaltyInfo = await deplyedBeerBotClub.royaltyInfo(tokenMintedId, 100);
+            expect(tokenCeroRoyaltyInfo[0]).to.equal(SplitterContractAddress);
+            expect(tokenCeroRoyaltyInfo[1].toNumber()).to.equal(7)
+        });
+
+    });
+
+    describe("Withdraws...", async () => {
+        it("Withdraws the correct balance to the correct address", async () => {
+            const { 
+                creator, 
+                leadDude, 
+                artirstDude, 
+                devDude, 
+                someDudeOne, 
+                somdeDudeTwo, 
+                holders, 
+                project, 
+                whiteListeOne,  
+                whiteListeTwo, 
+                deplyedBeerBotClub 
+            } = await setuprBeerBotClub({ });
         
-//         it("Only creator can withdraw the funds", async () => {
-//             const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
+            // unpause contract
+            await deplyedBeerBotClub.connect(creator).unpauseByContract()
+
+            // unable whitelist mode
+            await deplyedBeerBotClub.connect(creator).unableWhiteListMode()
+
+            await Promise.all([
+                deplyedBeerBotClub.connect(someDudeOne).mint({
+                from: someDudeOne.address,
+                value: ethers.utils.parseEther('20'),
+                }), 
+                deplyedBeerBotClub.connect(someDudeOne).mint({
+                from: someDudeOne.address,
+                value: ethers.utils.parseEther('20'),
+                })
+            ]);
+        
+            const provider = ethers.provider;
+            let balanceStart = await provider.getBalance(creator.address);
+            const tx = await deplyedBeerBotClub.connect(creator).withdraw();
+            const receipt = await tx.wait();
+            const gasSpent = receipt.gasUsed.mul(receipt.effectiveGasPrice);
+            expectedBalance = balanceStart.add(ethers.utils.parseEther('40'));
+            expect(await creator.getBalance()).to.eq(expectedBalance.sub(gasSpent));
+
+        });
+        
+        it("Only creator can withdraw the funds", async () => {
+            const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
     
-//           await expect(deplyedBeerBotClub.connect(somdeDudeTwo).withdraw()).to.be.revertedWith("Ownable: caller is not the owner" );
-//         });
-//       });
-// });
+          await expect(deplyedBeerBotClub.connect(somdeDudeTwo).withdraw()).to.be.revertedWith("Ownable: caller is not the owner" );
+        });
+    });
+
 
 
 // //------------------------------------------------------------------------------------------------------------------------------------
