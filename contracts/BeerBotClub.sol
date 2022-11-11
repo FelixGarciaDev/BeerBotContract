@@ -131,9 +131,8 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
     function unpauseByContract()
         external
         onlyOwner
-        {
-            bool pauseStatus = isPausedByContract();
-            require(pauseStatus == true, "BmClub: minting is NOT paused");
+        {            
+            require(isPausedByContract(), "BmClub: minting is NOT paused");
             pausedByContract = !pausedByContract;
         }
 
@@ -151,8 +150,7 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
         external
         onlyOwner
         {
-            bool whiteListModeStatus = isWhileListMode();
-            require(whiteListModeStatus == true, "BeerBotClub: whiteListMode is NOT active");
+            require(isWhileListMode(), "BeerBotClub: whiteListMode is NOT active");
             onlyWhitelisteds = !onlyWhitelisteds;
         }
     
@@ -183,7 +181,7 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
 
     // Mint logic
 
-    function actualMint(uint256 _current ) 
+    function actualMint(uint256 _current) 
         internal
         {
             uint256 modBy;
@@ -211,22 +209,28 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
         }
     
 
-    function mint() 
+    function mint(uint256 _amount) 
         public
         payable
         {
-            uint256 current;
-            require(!isPausedByContract(), "BeerBotClub: minting is paused");
+            require(!isPausedByContract(), "BeerBotClub: minting is paused");            
+            // _idCounter to uint
+            uint256 current;            
             current = _idCounter.current();           
-            require(current < maxSupply, "BeerBotClub: BEERBOTS SOLD OUT!");
-            require(msg.value >= fundsRequired,"BeerBotClub: You need more funds to mint more BeerBots");
+            // more requires
+            require(current < maxSupply, "BeerBotClub: BEERBOTS SOLD OUT!");            
+            require(_amount > 0 && _amount <= 10, "BeerBotClub: Invalid amount");
+            require(current + _amount <= maxSupply, "BeerBotClub: Mint less BeerBots");
+            require(msg.value >= fundsRequired*_amount,"BeerBotClub: You need more funds to mint more BeerBots");
             // whiteList minting
             if (onlyWhitelisteds == true){
                 require(addressIsWhiteListed(msg.sender), "You are not whitelisted, wait for the whitelist mode to end");
                 actualMint(current);                
             }
             // normal minting
-            actualMint(current);
+            for (uint256 i = 0; i < _amount; i++) {
+                actualMint(current);
+            }                   
         }
 
     function tokenURI(uint256 tokenId) 
@@ -236,16 +240,14 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
         override 
         returns (string memory) 
         {
-            require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
-
-            string memory baseURI = _baseURI();
-            return string(abi.encodePacked(baseURI, tokenId.toString()));            
+            require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");            
+            return string(abi.encodePacked(_baseURI(), tokenId.toString()));            
         }
 
         
 
     function withdraw() 
-        public 
+        external 
         payable
         onlyOwner        
         {
@@ -292,9 +294,7 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
             require(_exists(_tokenId), "Nonexistent token");
             receiver = royalties[_tokenId].splitter;
             royaltyAmount = (royalties[_tokenId].royaltyPercent * _salePrice) / 10000;
-
-            return (receiver, royaltyAmount);
-            //return (royaltysAddress, calculateRoyalty(_salePrice));
+            return (receiver, royaltyAmount);            
         }
 
     function supportsInterface(bytes4 interfaceId)
@@ -306,12 +306,12 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
             return interfaceId == 0x2a55205a || super.supportsInterface(interfaceId);
         }
     
-    function setRoyaltyInfo(address _receiver, uint16 _royaltyFeesInBips) 
-        public 
+    function setRoyaltyInfo(address _receiver, uint16 _royaltyFeesInBps) 
+        external 
         onlyOwner 
         {
             royaltysAddress = _receiver;
-            royaltyPercentage = _royaltyFeesInBips;
+            royaltyPercentage = _royaltyFeesInBps;
         }
 
 }
