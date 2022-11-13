@@ -2,17 +2,14 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
 import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "./BotSelector.sol";
-import "./SelfPausable.sol";
 
-contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSelector, PaymentSplitter  {
+contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSplitter  {
     using Counters for Counters.Counter;
     using Strings for uint256;
 
@@ -22,15 +19,19 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
 
     bool private onlyWhitelisteds;
 
+    string private _customBaseUri;
+
+    uint16[] private normalNumbers;
+    uint16[] private exoticNumbers;
+
     uint256 public maxSupply;
+    uint8 public exoticSupply;
 
     uint256 public fundsRequired;
 
     address public royaltysAddress;
 
     uint16 public royaltyPercentage;
-
-    string private _customBaseUri;
 
     struct RoyaltyReceiver {
         address splitter;
@@ -39,15 +40,12 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
 
     mapping(uint256 => RoyaltyReceiver) royalties;
 
-    uint16[] private _randomNumbers;
-
     mapping(address => uint8) public availableMintsForWhitelisteds;
-
 
     constructor(uint16 _maxSupply, 
                 uint256 _fundsRequired, 
                 address _royaltysAddress, 
-                uint16 _royaltyPercentage, 
+                uint16 _royaltyPercentage,                 
                 address[] memory _payees, 
                 uint256[] memory  _shares) 
                 ERC721("BeerBot", "BBCLUB") 
@@ -57,13 +55,20 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
                     pausedByContract = true;
                     onlyWhitelisteds = true;
                     maxSupply = _maxSupply;
+                    exoticSupply = 0;
                     fundsRequired = _fundsRequired;
                     royaltysAddress = _royaltysAddress;
-                    royaltyPercentage = _royaltyPercentage;
+                    royaltyPercentage = _royaltyPercentage;                    
                     _customBaseUri = "https://api.beerbot.club/";
-                    for(uint16 i = 0; i < _maxSupply; i++) {
-                        _randomNumbers.push(i);
+
+                    for(uint16 i = 0; i < 9; i++) {
+                        exoticNumbers.push(i);
                     }
+
+                    for(uint16 i = 9; i < maxSupply; i++) {
+                        normalNumbers.push(i);
+                    }
+                    
                 }
 
     function setBaseURI (string memory customBaseUri_) 
@@ -132,7 +137,7 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
         external
         onlyOwner
         {            
-            require(isPausedByContract(), "BmClub: minting is NOT paused");
+            require(isPausedByContract(), "Minting NOT paused");
             pausedByContract = !pausedByContract;
         }
 
@@ -150,7 +155,7 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
         external
         onlyOwner
         {
-            require(isWhileListMode(), "BeerBotClub: whiteListMode is NOT active");
+            require(isWhileListMode(), "whiteListMode NOT active");
             onlyWhitelisteds = !onlyWhitelisteds;
         }
     
@@ -179,31 +184,66 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
         return isWhileListMode() && availableMintsForWhitelisteds[_walletAddress] == 1 ? true : false;   
     }
 
+    function _totalSupply() 
+        public 
+        view 
+        returns (uint) {
+        return _idCounter.current();
+    }
+
+    function _totalExoticSupply() 
+        public 
+        view 
+        returns (uint) {
+        return exoticSupply;
+    }
+
     // Mint logic
 
     function actualMint(uint256 _current) 
         internal
-        {
-            uint256 modBy;
+        {            
             uint256 randomBotId;            
             uint256 resultNumber;
-            // generate a random bot id
-            modBy = _randomNumbers.length;
-            randomBotId = getRandomBotId(maxSupply, _current, msg.sender, modBy);            
-            resultNumber = _randomNumbers[randomBotId];
-            _randomNumbers[randomBotId] = _randomNumbers[_randomNumbers.length - 1];            
-            _randomNumbers.pop();
-            // // Set Royalties
-            royalties[randomBotId] = RoyaltyReceiver({
+            uint decider;
+            decider = 0;
+            // decide from where to pick a number            
+            if (_current > 250 && (normalNumbers.length +  exoticNumbers.length) > 2666 && exoticSupply < 3){                
+                decider = getDecider(maxSupply, _current, msg.sender);
+            }
+
+            if (_current > 1333 && (normalNumbers.length +  exoticNumbers.length) > 1333 && exoticSupply < 6){
+                decider = getDecider(maxSupply, _current, msg.sender);
+            }
+
+            if (_current > 2666 && exoticSupply < 9){
+                decider = getDecider(maxSupply, _current, msg.sender);
+            }
+
+            // Generate a random bot id            
+            //randomBotId = getRandomBotId(decider, maxSupply, exoticSupply, _current, msg.sender, normalNumbers.length, exoticNumbers.length);
+            randomBotId = getRandomBotId(decider, maxSupply, exoticSupply, _current, msg.sender, normalNumbers.length, exoticNumbers.length);
+            if (decider == 1){
+                resultNumber = exoticNumbers[randomBotId];
+                exoticNumbers[randomBotId] = exoticNumbers[exoticNumbers.length - 1];
+                exoticNumbers.pop();
+            } else {
+                resultNumber = normalNumbers[randomBotId];
+                normalNumbers[randomBotId] = normalNumbers[normalNumbers.length - 1];            
+                normalNumbers.pop();
+            }            
+            // Set Royalties
+            royalties[resultNumber] = RoyaltyReceiver({
                 splitter: getRoyaltyAddress(),
                 royaltyPercent: royaltyPercentage
             });
-            // mint the ramdon bot
+            // Mint the ramdon bot
             _safeMint(msg.sender, resultNumber);
-            _idCounter.increment();
-            // pause minting logic
-            // 1332, 2665, 3998
-            if ((_idCounter.current() == 1332 || _idCounter.current() == 2665) && !isPausedByContract()){
+            _idCounter.increment();      
+            if (resultNumber >= 0 && resultNumber <= 8){
+                exoticSupply++;
+            }      
+            if ((_idCounter.current() == 1333 || _idCounter.current() == 2666) && !isPausedByContract()){
                 pauseByContract();
             }            
         }
@@ -213,22 +253,21 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
         public
         payable
         {
-            require(!isPausedByContract(), "BeerBotClub: minting is paused");            
+            require(!isPausedByContract(), "minting is paused");            
             // _idCounter to uint
             uint256 current;            
-            current = _idCounter.current();           
-            // more requires
-            require(current < maxSupply, "BeerBotClub: BEERBOTS SOLD OUT!");            
-            require(_amount > 0 && _amount <= 10, "BeerBotClub: Invalid amount");
-            require(current + _amount <= maxSupply, "BeerBotClub: Mint less BeerBots");
-            require(msg.value >= fundsRequired*_amount,"BeerBotClub: You need more funds to mint more BeerBots");
-            // whiteList minting
+            current = _idCounter.current();                       
+            require(current < maxSupply, "BEERBOTS SOLD OUT!");            
+            require(_amount > 0 && _amount <= 10, "Invalid amount");
+            require(current + _amount <= maxSupply, "Mint less BeerBots");
+            require(msg.value >= fundsRequired*_amount,"Need more funds");
+            
             if (onlyWhitelisteds == true){
-                require(addressIsWhiteListed(msg.sender), "You are not whitelisted, wait for the whitelist mode to end");
+                require(addressIsWhiteListed(msg.sender), "You are not whitelisted");
                 actualMint(current);                
             }
-            // normal minting
-            for (uint256 i = 0; i < _amount; i++) {
+            
+            for (uint8 i = 0; i < _amount; i++) {
                 actualMint(current);
             }                   
         }
@@ -264,12 +303,9 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
             super.release(account);
         }
 
-
-    // The following functions are overrides required by Solidity.
-
     function _beforeTokenTransfer(address from, address to, uint256 tokenId)
         internal
-        override(ERC721, ERC721Enumerable)
+        override(ERC721)
         {
             super._beforeTokenTransfer(from, to, tokenId);
             
@@ -281,8 +317,6 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
         {
             super._burn(tokenId);
         }
-
-    // The following functions are for royalty info
 
     function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
         public
@@ -300,7 +334,7 @@ contract BeerBotClub is ERC721, ERC721Enumerable, ERC721Royalty, Ownable, BotSel
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable, ERC721Royalty)
+        override(ERC721, ERC721Royalty)
         returns (bool)
         {
             return interfaceId == 0x2a55205a || super.supportsInterface(interfaceId);

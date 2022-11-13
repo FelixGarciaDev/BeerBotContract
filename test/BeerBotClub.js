@@ -193,7 +193,7 @@ describe("BeerBotClub Collection", () => {
             await expect(deplyedBeerBotClub.connect(whiteListeOne).mint(1,{
                 from: whiteListeOne.address,
                 value: ethers.utils.parseEther('20'),
-            })).to.be.revertedWith("BeerBotClub: minting is paused");
+            })).to.be.revertedWith("minting is paused");
 
             // change pause status, only owner can do that
             await expect(deplyedBeerBotClub.connect(someDudeOne).unpauseByContract()).to.be.revertedWith('Ownable: caller is not the owner');
@@ -213,7 +213,7 @@ describe("BeerBotClub Collection", () => {
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint(1,{
                 from: someDudeOne.address,
                 value: ethers.utils.parseEther('20'),
-            })).to.be.revertedWith("You are not whitelisted, wait for the whitelist mode to end");
+            })).to.be.revertedWith("You are not whitelisted");
 
             // change whitelist mode status, only owner can do that
             await expect(deplyedBeerBotClub.connect(someDudeOne).unableWhiteListMode()).to.be.revertedWith('Ownable: caller is not the owner');
@@ -243,12 +243,12 @@ describe("BeerBotClub Collection", () => {
             await expect(deplyedBeerBotClub.connect(whiteListeOne).mint(1,{
                 from: whiteListeOne.address,
                 value: ethers.utils.parseEther('20'),
-            })).to.be.revertedWith("BeerBotClub: minting is paused");
+            })).to.be.revertedWith("minting is paused");
 
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint(1,{
                 from: someDudeOne.address,
                 value: ethers.utils.parseEther('20'),
-            })).to.be.revertedWith("BeerBotClub: minting is paused");
+            })).to.be.revertedWith("minting is paused");
         });
 
         it("Whilisted addresses in whitelisted mode only can mint up to five times", async () =>{
@@ -285,7 +285,7 @@ describe("BeerBotClub Collection", () => {
             await expect(deplyedBeerBotClub.connect(whiteListeTwo).mint(1,{
                 from: whiteListeTwo.address,
                 value: ethers.utils.parseEther('20'),
-            })).to.be.revertedWith("BeerBotClub: minting is paused");
+            })).to.be.revertedWith("minting is paused");
 
             // change pause status
             await deplyedBeerBotClub.connect(creator).unpauseByContract()
@@ -317,32 +317,6 @@ describe("BeerBotClub Collection", () => {
                 }),
             ]);
 
-        });
-
-        it("Has a minting limit", async () => {
-            const maxSupply = 2;      
-            const { creator, deplyedBeerBotClub } = await setuprBeerBotClub({ maxSupply });
-            // unpause contract
-            await deplyedBeerBotClub.connect(creator).unpauseByContract()
-            // unable whitelist mode
-            await deplyedBeerBotClub.connect(creator).unableWhiteListMode()
-            // Mint all
-            await Promise.all([              
-              deplyedBeerBotClub.connect(creator).mint(1,{
-                from: creator.address,
-                value: ethers.utils.parseEther('20'),
-              }),
-              deplyedBeerBotClub.connect(creator).mint(1,{
-                from: creator.address,
-                value: ethers.utils.parseEther('20'),
-              })
-            ]);
-      
-            // Assert the last minting
-            await expect(deplyedBeerBotClub.connect(creator).mint(1,{
-                from: creator.address,
-                value: ethers.utils.parseEther('20'),
-            })).to.be.revertedWith("BeerBotClub: BEERBOTS SOLD OUT!");
         });
 
         it("The amout of needed BNB can change... and only owner can change it", async () => {
@@ -390,7 +364,7 @@ describe("BeerBotClub Collection", () => {
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint(1,{
                 from: someDudeOne.address,
                 value: ethers.utils.parseEther('10'),
-            })).to.be.revertedWith("BeerBotClub: You need more funds to mint more BeerBots");
+            })).to.be.revertedWith("Need more funds");
 
             // change the required amount, only owner can do this
             // await expect(deplyedBeerBotClub.connect(somdeDudeTwo).setRequiredFunds(35000000000000000000n)).to.be.revertedWith("Ownable: caller is not the owner" ); 
@@ -404,7 +378,7 @@ describe("BeerBotClub Collection", () => {
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint(1,{
                 from: someDudeOne.address,
                 value: ethers.utils.parseEther('10'),
-            })).to.be.revertedWith("BeerBotClub: You need more funds to mint more BeerBots");
+            })).to.be.revertedWith("Need more funds");
 
             // mint the with required funds
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint(1,{
@@ -439,19 +413,19 @@ describe("BeerBotClub Collection", () => {
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint(0,{
                 from: someDudeOne.address,
                 value: ethers.utils.parseEther('20'),
-            })).to.be.revertedWith("BeerBotClub: Invalid amount");
+            })).to.be.revertedWith("Invalid amount");
 
             // cant request more than 10 mints...            
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint(11,{
                 from: someDudeOne.address,
                 value: ethers.utils.parseEther('220'),
-            })).to.be.revertedWith("BeerBotClub: Invalid amount");
+            })).to.be.revertedWith("Invalid amount");
 
             // cant do 10 mints with less than fundsRequired*10
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint(10,{
                 from: someDudeOne.address,
                 value: ethers.utils.parseEther('20'),
-            })).to.be.revertedWith("BeerBotClub: You need more funds to mint more BeerBots");
+            })).to.be.revertedWith("Need more funds");
 
             // cant request beetween 1 and 10 mints
             await Promise.all([
@@ -705,7 +679,9 @@ describe("BeerBotClub Collection", () => {
             let receipt = await tx.wait();
             info = receipt.logs[0]
             let tokenMintedId = parseInt(Number(info.topics[3]))
+            // console.log("minted id: "+tokenMintedId);
             const tokenCeroRoyaltyInfo = await deplyedBeerBotClub.royaltyInfo(tokenMintedId, 100);
+            // console.log("royalty info: "+tokenCeroRoyaltyInfo);
             expect(tokenCeroRoyaltyInfo[0]).to.equal(SplitterContractAddress);
             expect(tokenCeroRoyaltyInfo[1].toNumber()).to.equal(7)
         });
@@ -731,16 +707,16 @@ describe("BeerBotClub Collection", () => {
             await deplyedBeerBotClub.connect(creator).unableWhiteListMode()
 
             // 
-            let newRoyaltyAddress = "0x1F0BC69eC3c3A53afe46a1541B59326fdCf54df2"
-            let newRoyaltyBasisPoints = 800
-            await expect(deplyedBeerBotClub.connect(whiteListeTwo).setRoyaltyInfo(newRoyaltyAddress, newRoyaltyBasisPoints)).to.be.revertedWith("Ownable: caller is not the owner" );            
+            let newRoyaltyAddress = "0x1F0BC69eC3c3A53afe46a1541B59326fdCf54df2";
+            let newRoyaltyBasisPoints = 800;
+            await expect(deplyedBeerBotClub.connect(whiteListeTwo).setRoyaltyInfo(newRoyaltyAddress, newRoyaltyBasisPoints)).to.be.revertedWith("Ownable: caller is not the owner" );
             await deplyedBeerBotClub.connect(creator).setRoyaltyInfo(newRoyaltyAddress, newRoyaltyBasisPoints)
             const tx = await deplyedBeerBotClub.connect(someDudeOne).mint(1,{
                 from: someDudeOne.address,
                 value: ethers.utils.parseEther('20'),
             });
             let receipt = await tx.wait();
-            info = receipt.logs[0]
+            info = receipt.logs[0];
             let tokenMintedId = parseInt(Number(info.topics[3]))
             const tokenCeroRoyaltyInfo = await deplyedBeerBotClub.royaltyInfo(tokenMintedId, 100);            
             expect(tokenCeroRoyaltyInfo[0]).to.equal(newRoyaltyAddress);
@@ -795,201 +771,6 @@ describe("BeerBotClub Collection", () => {
             const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
     
           await expect(deplyedBeerBotClub.connect(somdeDudeTwo).withdraw()).to.be.revertedWith("Ownable: caller is not the owner" );
-        });
-    });
-});
-
-//------------------------------------------------------------------------------------------------------------------------------------
-
-describe("All bots can be minted...", () => {
-    const setuprBeerBotClub = async ({ 
-        maxSupply = 4000, 
-        fundsRequiredInWeis = 20000000000000000000n, 
-        SplitterContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3", 
-        SplitterContractPercentage = 700,
-        
-        mintEconomicsAddresses = [
-            "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // creator
-            "0x976EA74026E726554dB657fA54763abd0C3a0aa9", // holders
-            "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955", // project
-            "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", // leadDude
-            "0x90F79bf6EB2c4f870365E785982E1f101E93b906", // devDude
-        ], 
-        mintEconomicsPercentages = [
-            7,
-            75,
-            10,
-            5,
-            3
-        ]
-    }) => {
-        const [creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, , 
-            somdeDudethree, somdeDudeFour, someDudeFive, someDudeSix, someDudeSeven, 
-            someDudeEight, someDudeNine, SomeDudeTen, someDudeEleven, holders, project] = await ethers.getSigners();        
-        const BeerBotClub = await ethers.getContractFactory("BeerBotClub");        
-        const deplyedBeerBotClub = await BeerBotClub.deploy(maxSupply, fundsRequiredInWeis, SplitterContractAddress, SplitterContractPercentage, mintEconomicsAddresses, mintEconomicsPercentages);
-
-        return {
-            creator,
-            leadDude,
-            artirstDude,
-            devDude,
-            someDudeOne,
-            somdeDudeTwo,            
-            somdeDudethree, 
-            somdeDudeFour, 
-            someDudeFive, 
-            someDudeSix, 
-            someDudeSeven, 
-            someDudeEight, 
-            someDudeNine, 
-            SomeDudeTen,
-            someDudeEleven,
-            holders,
-            project,            
-            deplyedBeerBotClub
-        };
-    }
-
-    describe("Minting ALL", () => {
-        it("pause and unpause by each round, only creator can unpause minting, bot 4000 does not exist, limit is reached, each nft has an unique id and have their respective owner", async () => {
-            const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, somdeDudethree, 
-                somdeDudeFour, someDudeFive, someDudeSix, someDudeSeven, someDudeEight, someDudeNine, 
-                SomeDudeTen, someDudeEleven, holders, project, deployedSplitter, deplyedBeerBotClub } = await setuprBeerBotClub({ });
-            
-            // unpause contract
-            await deplyedBeerBotClub.connect(creator).unpauseByContract()
-
-            // unable whitelist mode
-            await deplyedBeerBotClub.connect(creator).unableWhiteListMode()
-            
-            let counter = 0;
-            // console.log("is pause by contract? " +  await deplyedBeerBotClub.connect(devDude).isPausedByContract());
-            for (let i = 0; i <= 399; i++){ // 400
-                await deplyedBeerBotClub.connect(someDudeOne).mint(1,{from: someDudeOne.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-            
-            for (let i = 0; i <= 399; i++){ // 400
-                await deplyedBeerBotClub.connect(somdeDudeTwo).mint(1,{from: somdeDudeTwo.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-
-            for (let i = 0; i <= 399; i++){ // 400
-                await deplyedBeerBotClub.connect(somdeDudethree).mint(1,{from: somdeDudethree.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-            
-            for (let i = 0; i <= 131; i++){ // 132
-                await deplyedBeerBotClub.connect(somdeDudeFour).mint(1,{from: somdeDudeFour.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-            // 1332 bot id reached...check minting is paused... then unpause
-            console.log("1332 bot id reached...check minting is paused... then unpause");
-            await expect(deplyedBeerBotClub.connect(devDude).mint(1,{
-                            from: devDude.address,
-                            value: ethers.utils.parseEther('20'),
-                        })).to.be.revertedWith("BeerBotClub: minting is paused");
-
-            await expect(deplyedBeerBotClub.connect(devDude).unpauseByContract()).to.be.revertedWith("Ownable: caller is not the owner" );
-            await deplyedBeerBotClub.connect(creator).unpauseByContract()
-            expect(await deplyedBeerBotClub.connect(creator).isPausedByContract()).to.be.eq(false);
-            // continue minting
-            for (let i = 0; i <= 267; i++){ // 268
-                await deplyedBeerBotClub.connect(somdeDudeFour).mint(1,{from: somdeDudeFour.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-
-            for (let i = 0; i <= 399; i++){ // 400
-                await deplyedBeerBotClub.connect(someDudeFive).mint(1,{from: someDudeFive.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-
-            for (let i = 0; i <= 399; i++){ // 400
-                await deplyedBeerBotClub.connect(someDudeSix).mint(1,{from: someDudeSix.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-
-            for (let i = 0; i <= 264; i++){ // 265
-                await deplyedBeerBotClub.connect(someDudeSeven).mint(1,{from: someDudeSeven.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-            // 2665 bot id reached...check minting is paused... then unpause
-            console.log("2665 bot id reached...check minting is paused... then unpause")
-            await expect(deplyedBeerBotClub.connect(devDude).mint(1,{
-                from: devDude.address,
-                value: ethers.utils.parseEther('20'),
-            })).to.be.revertedWith("BeerBotClub: minting is paused");
-
-            await expect(deplyedBeerBotClub.connect(devDude).unpauseByContract()).to.be.revertedWith("Ownable: caller is not the owner" );
-            await deplyedBeerBotClub.connect(creator).unpauseByContract()
-            expect(await deplyedBeerBotClub.connect(devDude).isPausedByContract()).to.be.eq(false);
-            //continue minting
-            for (let i = 0; i <= 399; i++){ // 400
-                await deplyedBeerBotClub.connect(someDudeEight).mint(1,{from: someDudeEight.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-
-            for (let i = 0; i <= 399; i++){ // 400
-                await deplyedBeerBotClub.connect(someDudeNine).mint(1,{from: someDudeNine.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-
-            for (let i = 0; i <= 399; i++){ // 400
-                await deplyedBeerBotClub.connect(SomeDudeTen).mint(1,{from: SomeDudeTen.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-
-            for (let i = 0; i <= 134; i++){ // 134
-                await deplyedBeerBotClub.connect(someDudeEleven).mint(1,{from: someDudeEleven.address, value: ethers.utils.parseEther('20')})
-                counter++;
-            }
-            // console.log(counter);
-            // console.log("in contract counter... "+ await deplyedBeerBotClub.connect(devDude).getCurrentNumberOfBots());
-            
-            // console.log("is pause by contract? " +  await deplyedBeerBotClub.connect(devDude).isPausedByContract());
-            // 3998 bot id reached... check that there is no more bots...
-            console.log("3999 bot id reached... check that there is no more bots...")
-            await expect(deplyedBeerBotClub.connect(artirstDude).mint(1,{from: artirstDude.address, value: ethers.utils.parseEther('20')})).to.be.revertedWith("BeerBotClub: BEERBOTS SOLD OUT!");
-
-            let balanceOfDudeOne = await deplyedBeerBotClub.connect(creator).balanceOf(someDudeOne.address);
-            let balanceOfDudeTwo = await deplyedBeerBotClub.connect(creator).balanceOf(somdeDudeTwo.address);
-            let balanceOfDudeThree = await deplyedBeerBotClub.connect(creator).balanceOf(somdeDudethree.address);
-            let balanceOfDudeFour = await deplyedBeerBotClub.connect(creator).balanceOf(somdeDudeFour.address);
-            let balanceOfDudeFive = await deplyedBeerBotClub.connect(creator).balanceOf(someDudeFive.address);
-            let balanceOfDudeSix = await deplyedBeerBotClub.connect(creator).balanceOf(someDudeSix.address);
-            let balanceOfDudeSeven = await deplyedBeerBotClub.connect(creator).balanceOf(someDudeSeven.address);
-            let balanceOfDudeEight = await deplyedBeerBotClub.connect(creator).balanceOf(someDudeEight.address);
-            let balanceOfDudeNine = await deplyedBeerBotClub.connect(creator).balanceOf(someDudeNine.address);
-            let balanceOfDudeTen = await deplyedBeerBotClub.connect(creator).balanceOf(SomeDudeTen.address);
-            let balanceOfDudeEleven = await deplyedBeerBotClub.connect(creator).balanceOf(someDudeEleven.address);
-
-            totalBalance = balanceOfDudeOne.add(balanceOfDudeTwo).add(balanceOfDudeThree).add(balanceOfDudeFour).add(balanceOfDudeFive).add(balanceOfDudeSix).add(balanceOfDudeSeven).add(balanceOfDudeEight).add(balanceOfDudeNine).add(balanceOfDudeTen).add(balanceOfDudeEleven);
-            console.log("the total of nfts is...")
-            console.log(totalBalance)            
-            await expect(deplyedBeerBotClub.ownerOf(4000)).to.be.revertedWith("ERC721: invalid token ID");
-            await expect(deplyedBeerBotClub.ownerOf(4001)).to.be.revertedWith("ERC721: invalid token ID");
-            console.log("almost all good");
-            // check that every nft has an owner...
-            let ids = [];
-            for (let i = 0; i < 4000; i++){
-                ids.push(i);
-            }
-            
-            let owners = {}
-            for (id of ids){
-                owners[String(id)] = await deplyedBeerBotClub.connect(creator).ownerOf(id);
-            }
-            
-            // console.log(owners)
-            // var fs = require('fs');
-            // var jsonData = JSON.stringify(owners);
-            // fs.writeFile("owners.json", jsonData, function(err) {
-            //     if (err) {
-            //         console.log(err);
-            //     }
-            // });
-
         });
     });
 });
