@@ -1,15 +1,31 @@
-BeerBotClubContractAddress = 0x0daA789dA6E8514f987C2b306D0B8239Dd74daE2
+# BeerBot CLub contract
 
-0x10C78cF7467649774d1Fc7CB9a432A837E304d25
+This contract was deployed on bnb chain.
+```
+BNB chain tesnet Contract address = 0xe5f4e0d7d7118950bF4f2D2512c0C1d24fC467b2
+```
+intract with it in explorer [https://testnet.bscscan.com/address/0xe5f4e0d7d7118950bf4f2d2512c0c1d24fc467b2](https://testnet.bscscan.com/address/0xe5f4e0d7d7118950bf4f2d2512c0c1d24fc467b2).
 
-[check it on mumbai polygon scan](https://mumbai.polygonscan.com/address/0x0daA789dA6E8514f987C2b306D0B8239Dd74daE2#readContract)
+### About this contract
 
----
-This contract was deployed on bnb chain
+This contract is one of the 3 contracts that make up the foundations of BeerBot Club.
 
-Contract address = 0x0daA789dA6E8514f987C2b306D0B8239Dd74daE2
+- BeerBotClub Contract
+- Team Splitter Contract
+- Holders Splitter Contract
 
-intract with it in explorer [https://testnet.bscscan.com/address/0x0daA789dA6E8514f987C2b306D0B8239Dd74daE2#code](https://testnet.bscscan.com/address/0x0daA789dA6E8514f987C2b306D0B8239Dd74daE2#code).
+This ERC-721 contract have some particularities like: 
 
+- Allow minting for a limited time to whitelisted addresses only
+- Pausing by rounds of 1333 mints each one
 
-0x78ED34b2e4976EfD8ae156C52C6e8cc326Cf2901
+For more information about the BeerBot Club you can read [its whitepaper](https://beerbot.club/WhitepaperBeerBotClub.pdf)
+
+### What does this contract do?
+- Set BaseURI
+- Set the required token amount for mint
+- Set the royalties info
+- Pause mint and other functions by rounds
+- Pause mint and other functions at owner's will
+- Add addresses to a whitelist
+- And of course, Minting ;)

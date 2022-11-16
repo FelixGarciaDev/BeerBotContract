@@ -1,16 +1,5 @@
 require('dotenv').config();
 const { expect } = require("chai");
-// const { BigNumber } = require('ethers');
-
-// pause checkpoint // 1332, 2665, 3998
-
-//                             30000000n
-//                    43843885000000000n
-//    0.02 MATIC      20000000000000000n
-//    0.30 MATIC     300000000000000000n
-//    1    MATIC    1000000000000000000n
-//   20    MATIC   20000000000000000000n
-//               9999943843885000000000n  
 
 describe("BeerBotClub Collection", () => {
     const setuprBeerBotClub = async ({ 
@@ -22,14 +11,12 @@ describe("BeerBotClub Collection", () => {
         mintEconomicsAddresses = [
             "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // creator
             "0x976EA74026E726554dB657fA54763abd0C3a0aa9", // holders
-            "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955", // project
             "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", // leadDude
             "0x90F79bf6EB2c4f870365E785982E1f101E93b906", // devDude
         ], 
         mintEconomicsPercentages = [
-            7,
-            75,
-            10,
+            22,
+            70,            
             5,
             3
         ]
@@ -343,16 +330,6 @@ describe("BeerBotClub Collection", () => {
             // check the original amount
             originalAmount = await deplyedBeerBotClub.connect(creator).getRequiredFunds();
             await expect(originalAmount).to.eq(ethers.utils.parseEther('20'));
-
-            // let whiteListeTwoStartBalance = await provider.getBalance(holders.address);
-            // console.log(whiteListeTwoStartBalance)
-            // const weiValue = 20000000000000000000n;
-            // const ethValue = ethers.utils.formatEther(weiValue);            
-            // console.log(ethers.utils.parseEther('20'))
-            // console.log("the bnb value is: "+ethValue)
-            // console.log("The valid amoutn in testnet contract starts from: "+ethers.utils.formatEther(20))
-            // console.log("then we changed to: "+ethers.utils.formatEther(3000000))
-            // console.log("and it should be : "+ethers.utils.formatEther(10000000000000000n))
                         
             // mint the with required funds
             await expect(deplyedBeerBotClub.connect(someDudeOne).mint(1,{
@@ -367,8 +344,6 @@ describe("BeerBotClub Collection", () => {
             })).to.be.revertedWith("Need more funds");
 
             // change the required amount, only owner can do this
-            // await expect(deplyedBeerBotClub.connect(somdeDudeTwo).setRequiredFunds(35000000000000000000n)).to.be.revertedWith("Ownable: caller is not the owner" ); 
-            // await deplyedBeerBotClub.connect(creator).setRequiredFunds(20000000000000000000n);
             await expect(deplyedBeerBotClub.connect(somdeDudeTwo).setRequiredFunds(ethers.utils.parseEther('30'))).to.be.revertedWith("Ownable: caller is not the owner" );
             await deplyedBeerBotClub.connect(creator).setRequiredFunds(ethers.utils.parseEther('30'));
             newAmount = await deplyedBeerBotClub.connect(creator).getRequiredFunds();
@@ -554,54 +529,55 @@ describe("BeerBotClub Collection", () => {
 
             const provider = ethers.provider;
 
+            let contractStartBalance = await provider.getBalance(deplyedBeerBotClub.address);
             let creatorStartBalance = await provider.getBalance(creator.address);
             let leadStartBalance = await provider.getBalance(leadDude.address);
             let artistStartBalance = await provider.getBalance(artirstDude.address);
             let devStartBalance = await provider.getBalance(devDude.address);
             let holdersStartBalance = await provider.getBalance(holders.address);
             let projectStartBalance = await provider.getBalance(project.address);
-
+            // just to see balances---------------------------------
+            // console.log("Starting balances...");
+            // console.log("contratc balance... " + contractStartBalance);
             // console.log("creatorBalance... "+creatorStartBalance);
             // console.log("leadBalance... "+leadStartBalance);
-            // console.log("artistBalance... "+artistStartBalance);
+            // //console.log("artistBalance... "+artistStartBalance);
             // console.log("devBalance... "+devStartBalance);
             // console.log("holdersBalance... "+holdersStartBalance);
-            // console.log("projectBalance... "+projectStartBalance);
-      
+            // //console.log("projectBalance... "+projectStartBalance);
+            // console.log("\n")
+            //------------------------------------------------------
+            console.log("some mints...\n")
             await Promise.all([
                 deplyedBeerBotClub.connect(somdeDudeTwo).mint(1,{
                   from: somdeDudeTwo.address,
-                  value: ethers.utils.parseEther('20'),
+                  value: ethers.utils.parseEther('50'),
                 }), 
                 deplyedBeerBotClub.connect(somdeDudeTwo).mint(1,{
                   from: somdeDudeTwo.address,
-                  value: ethers.utils.parseEther('20'),
+                  value: ethers.utils.parseEther('50'),
                 })
             ]);
             
             let contractBalance = await provider.getBalance(deplyedBeerBotClub.address);
-            const holderShare = contractBalance.mul(ethers.utils.parseEther('75')).div(ethers.utils.parseEther('100'));
-            const projectShare = contractBalance.mul(ethers.utils.parseEther('10')).div(ethers.utils.parseEther('100'));
+            const creatorShare = contractBalance.mul(ethers.utils.parseEther('22')).div(ethers.utils.parseEther('100'));
+            const holderShare = contractBalance.mul(ethers.utils.parseEther('70')).div(ethers.utils.parseEther('100'));
             const leadShare = contractBalance.mul(ethers.utils.parseEther('5')).div(ethers.utils.parseEther('100'));
             const devShare = contractBalance.mul(ethers.utils.parseEther('3')).div(ethers.utils.parseEther('100'));
-            const creatorShare = contractBalance.mul(ethers.utils.parseEther('7')).div(ethers.utils.parseEther('100'));
-            
+            //------------------------------------------------------
+            // console.log("Now the contrac balance and shares are..")
             // console.log("contrac balance... " + contractBalance);
-            // console.log("creatorShare... " + holderShare);
-            // console.log("projectShare... " + projectShare);
             // console.log("leadShare... " + leadShare);
             // console.log("devShare... " + devShare);
             // console.log("creatorShare... " + creatorShare);
-            // console.log("...")
-
+            // console.log("HoldersShare... " + holderShare);
+            // console.log("\n")
+            //------------------------------------------------------
+            // console.log("Now the release the shares")
             await expect(deplyedBeerBotClub.connect(someDudeOne)["release(address)"](holders.address)).to.be.revertedWith("Ownable: caller is not the owner" );
             let tx = await deplyedBeerBotClub.connect(creator)["release(address)"](holders.address);
             let receipt = await tx.wait();
             let gasSpent = receipt.gasUsed.mul(receipt.effectiveGasPrice);
-
-            tx = await deplyedBeerBotClub.connect(creator)["release(address)"](project.address);
-            receipt = await tx.wait();
-            gasSpent = gasSpent.add(receipt.gasUsed.mul(receipt.effectiveGasPrice));
 
             tx = await deplyedBeerBotClub.connect(creator)["release(address)"](leadDude.address);
             receipt = await tx.wait();
@@ -621,20 +597,17 @@ describe("BeerBotClub Collection", () => {
             let artistBalance = await provider.getBalance(artirstDude.address);
             let devBalance = await provider.getBalance(devDude.address);
             let holdersBalance = await provider.getBalance(holders.address);
-            let projectBalance = await provider.getBalance(project.address);
-
-            // console.log("contrac balance... " + contractBalance);
+            //------------------------------------------------------
+            // console.log("Ending balances...");
+            // console.log("contract balance... " + contractBalance);
             // console.log("creatorBalance... "+creatorBalance);
             // console.log("leadBalance... "+leadBalance);
-            // console.log("artistBalance... "+artistBalance);
             // console.log("devBalance... "+devBalance);
             // console.log("holdersBalance... "+holdersBalance);
-            // console.log("projectBalance... "+projectBalance);
-
+            //------------------------------------------------------
             expect(await contractBalance).to.eq(ethers.utils.parseEther('0'));
             expect(await leadBalance).to.eq(leadStartBalance.add(leadShare));
             expect(await devBalance).to.eq(devStartBalance.add(devShare));
-            expect(await projectBalance).to.eq(projectStartBalance.add(projectShare));
             expect(await holdersBalance).to.eq(holdersStartBalance.add(holderShare));
             expect(await creatorBalance).to.eq(creatorStartBalance.add(creatorShare).sub(gasSpent));
 

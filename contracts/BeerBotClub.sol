@@ -117,8 +117,6 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
             return royaltysAddress;
         }
 
-    // pause logic
-
     function pauseByContract()
         internal
         {
@@ -148,8 +146,6 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
         {
             return pausedByContract;
         }
-
-    // White list logic
 
     function unableWhiteListMode()
         external
@@ -198,8 +194,6 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
         return exoticSupply;
     }
 
-    // Mint logic
-
     function actualMint(uint256 _current) 
         internal
         {            
@@ -207,7 +201,7 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
             uint256 resultNumber;
             uint decider;
             decider = 0;
-            // decide from where to pick a number            
+                  
             if (_current > 250 && (normalNumbers.length +  exoticNumbers.length) > 2666 && exoticSupply < 3){                
                 decider = getDecider(maxSupply, _current, msg.sender);
             }
@@ -220,8 +214,6 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
                 decider = getDecider(maxSupply, _current, msg.sender);
             }
 
-            // Generate a random bot id            
-            //randomBotId = getRandomBotId(decider, maxSupply, exoticSupply, _current, msg.sender, normalNumbers.length, exoticNumbers.length);
             randomBotId = getRandomBotId(decider, maxSupply, exoticSupply, _current, msg.sender, normalNumbers.length, exoticNumbers.length);
             if (decider == 1){
                 resultNumber = exoticNumbers[randomBotId];
@@ -232,18 +224,18 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
                 normalNumbers[randomBotId] = normalNumbers[normalNumbers.length - 1];            
                 normalNumbers.pop();
             }            
-            // Set Royalties
+            
             royalties[resultNumber] = RoyaltyReceiver({
                 splitter: getRoyaltyAddress(),
                 royaltyPercent: royaltyPercentage
             });
-            // Mint the ramdon bot
+            
             _safeMint(msg.sender, resultNumber);
             _idCounter.increment();      
             if (resultNumber >= 0 && resultNumber <= 8){
                 exoticSupply++;
             }      
-            if ((_idCounter.current() == 1333 || _idCounter.current() == 2666) && !isPausedByContract()){
+            if ((_idCounter.current() >= 1333 || _idCounter.current() >= 2666) && !isPausedByContract()){
                 pauseByContract();
             }            
         }
@@ -254,7 +246,6 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
         payable
         {
             require(!isPausedByContract(), "minting is paused");            
-            // _idCounter to uint
             uint256 current;            
             current = _idCounter.current();                       
             require(current < maxSupply, "BEERBOTS SOLD OUT!");            
@@ -264,12 +255,16 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
             
             if (onlyWhitelisteds == true){
                 require(addressIsWhiteListed(msg.sender), "You are not whitelisted");
-                actualMint(current);                
+                for (uint8 i = 0; i < _amount; i++) {
+                    actualMint(current);
+                }                          
             }
-            
-            for (uint8 i = 0; i < _amount; i++) {
-                actualMint(current);
-            }                   
+
+            if (onlyWhitelisteds == false){
+                for (uint8 i = 0; i < _amount; i++) {
+                    actualMint(current);
+                }   
+            }       
         }
 
     function tokenURI(uint256 tokenId) 

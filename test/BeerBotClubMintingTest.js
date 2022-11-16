@@ -63,6 +63,9 @@ describe("All BeerBot can be minted and the exotics appear when they needed", ()
         it("Mints 3 specials on each round", async () => {
             let counter = 0;
             let specialCounter = 0;
+            let requiredFundsInWeis = "20000000000000000";
+            let bigIntRequiredFunds = BigInt(requiredFundsInWeis);
+            console.log("gonna pass this value in bnb: "+ethers.utils.formatEther(bigIntRequiredFunds))
 
             const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, somdeDudethree, 
                 somdeDudeFour, someDudeFive, someDudeSix, someDudeSeven, someDudeEight, someDudeNine, 
@@ -76,7 +79,7 @@ describe("All BeerBot can be minted and the exotics appear when they needed", ()
                 let receipt = await tx.wait();
                 info = receipt.logs[0];                
                 let tokenMintedId = parseInt(Number(info.topics[3]));
-                //console.log(tokenMintedId)
+
                 return tokenMintedId;
             }
             
@@ -278,53 +281,9 @@ describe("All BeerBot can be minted and the exotics appear when they needed", ()
             for (id of ids){
                 owners[String(id)] = await deplyedBeerBotClub.connect(creator).ownerOf(id);
             }
-            
-            // console.log(owners)
-            // var fs = require('fs');
-            // var jsonData = JSON.stringify(owners);
-            // fs.writeFile("owners.json", jsonData, function(err) {
-            //     if (err) {
-            //         console.log(err);
-            //     }
-            // });
 
         });
 
     });
 
 });
-
-
-
-
-
-
-
-// let firtsRoundIds = [];
-            // for (let i = 0; i < 4000; i++){
-            //     ids.push(i);
-            // }
-            
-            // let FirtsRoundOwners = {}
-            // for (firtsRoundID of firtsRoundIds){
-            //     try {
-            //         FirtsRoundOwners[String(id)] = await deplyedBeerBotClub.connect(creator).ownerOf(firtsRoundID);
-            //     } catch (e) {
-            //         continue
-            //     }                
-            // }
-
-            // var jsonData = JSON.stringify(FirtsRoundOwners);
-            // fs.writeFile("ownersFirtsRound.json", jsonData, function(err) {
-            //     if (err) {
-            //         console.log(err);
-            //     }
-            // });
-
-            // let checkArray = [1,2,3,4,5,6,7,8,9];
-            // let specialBeerBotCounter = 0;
-            // for (special in checkArray){
-            //     let dir = FirtsRoundOwners[String(special)]
-            //     specialBeerBotCounter++;
-            //     console.log(dir)
-            // }
