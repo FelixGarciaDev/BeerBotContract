@@ -235,7 +235,7 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
             if (resultNumber >= 0 && resultNumber <= 8){
                 exoticSupply++;
             }      
-            if ((_idCounter.current() >= 1333 || _idCounter.current() >= 2666) && !isPausedByContract()){
+            if ((_idCounter.current() == 1333 || _idCounter.current() == 2666) && !isPausedByContract()){
                 pauseByContract();
             }            
         }
@@ -245,13 +245,21 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
         public
         payable
         {
-            require(!isPausedByContract(), "minting is paused");            
+            require(pausedByContract == false, "minting is paused");            
             uint256 current;            
             current = _idCounter.current();                       
             require(current < maxSupply, "BEERBOTS SOLD OUT!");            
             require(_amount > 0 && _amount <= 10, "Invalid amount");
             require(current + _amount <= maxSupply, "Mint less BeerBots");
             require(msg.value >= fundsRequired*_amount,"Need more funds");
+
+            if (current >= 0 && current < 1333){
+                require(current + _amount <= 1333, "Mint less BeerBots");
+            }
+
+            if (current >= 1333 && current < 2666){
+                require(current + _amount <= 2666, "Mint less BeerBots");
+            }
             
             if (onlyWhitelisteds == true){
                 require(addressIsWhiteListed(msg.sender), "You are not whitelisted");

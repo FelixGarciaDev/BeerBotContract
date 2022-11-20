@@ -65,7 +65,7 @@ describe("All BeerBot can be minted and the exotics appear when they needed", ()
             let specialCounter = 0;
             let requiredFundsInWeis = "20000000000000000";
             let bigIntRequiredFunds = BigInt(requiredFundsInWeis);
-            console.log("gonna pass this value in bnb: "+ethers.utils.formatEther(bigIntRequiredFunds))
+            // console.log("gonna pass this value in bnb: "+ethers.utils.formatEther(bigIntRequiredFunds))
 
             const { creator, leadDude, artirstDude, devDude, someDudeOne, somdeDudeTwo, somdeDudethree, 
                 somdeDudeFour, someDudeFive, someDudeSix, someDudeSeven, someDudeEight, someDudeNine, 
@@ -114,10 +114,48 @@ describe("All BeerBot can be minted and the exotics appear when they needed", ()
                 counter++;
             }
             
-            for (let i = 0; i <= 132; i++){ // 133
+            for (let i = 0; i <= 122; i++){ // 123
                 let BeerbotMintedID = await getIdOfMinted(somdeDudeFour);
                 checkIfIdOfMintedIsSpecial(BeerbotMintedID);
                 counter++;
+            }
+
+
+            // 10 Beerbots remaining for reach 1333 BeerBots and finish firts round
+            // mint one more
+            await deplyedBeerBotClub.connect(someDudeEleven).mint(1,{
+                from: someDudeEleven.address,
+                value: ethers.utils.parseEther('20'),
+            });
+            counter++;
+
+            // 9 Beerbots remaining for reach 1333 Beerbots and finish firts round
+            // Check that max Supply wouldnt be exceeded when minting more than remaining
+            expect(await deplyedBeerBotClub.connect(creator)._totalSupply()).to.be.eq(1324);
+            console.log("1324 BeerBots reached... Check that 1333 BeerBots of firts round wouldnt be exceeded\n");
+            for(let i = 10; i > 0; i--){
+                stringAmount = (20*i).toString()                                
+                // mint one by step
+                if (i > 1){
+                    await expect(deplyedBeerBotClub.connect(someDudeEleven).mint(i,{
+                        from: someDudeEleven.address,
+                        value: ethers.utils.parseEther(stringAmount),
+                    })).to.be.revertedWith("Mint less BeerBots");   
+                    // console.log("reverted, "+i)
+
+                    await deplyedBeerBotClub.connect(someDudeEleven).mint(1,{
+                        from: someDudeEleven.address,
+                        value: ethers.utils.parseEther('20'),
+                    });
+                    counter++;
+                    // console.log("minted 1 more")
+                } else{
+                    // try to mint after last beerbot was minted...
+                    await expect(deplyedBeerBotClub.connect(someDudeEleven).mint(i,{
+                        from: someDudeEleven.address,
+                        value: ethers.utils.parseEther(stringAmount),
+                    })).to.be.revertedWith("minting is paused");   
+                }
             }
 
             //
@@ -126,21 +164,20 @@ describe("All BeerBot can be minted and the exotics appear when they needed", ()
             await expect(counter).to.be.eq(1333);
             await expect(specialCounter).to.be.eq(3),
             expect(await deplyedBeerBotClub.connect(creator)._totalExoticSupply()).to.be.eq(3);
-            expect(await deplyedBeerBotClub.connect(creator)._totalSupply()).to.be.eq(1333);
-            console.log("1333 BeerBots reached...check minting is paused... then unpause\n");
+            expect(await deplyedBeerBotClub.connect(creator)._totalSupply()).to.be.eq(1333);           
+            console.log("1333 BeerBots reached...check minting is paused... then unpause\n");           
             await expect(deplyedBeerBotClub.connect(devDude).mint(1,{
-                            from: devDude.address,
-                            value: ethers.utils.parseEther('20'),
-                        })).to.be.revertedWith("minting is paused");            
-            await expect(deplyedBeerBotClub.connect(devDude).unpauseByContract()).to.be.revertedWith("Ownable: caller is not the owner" );
+                from: devDude.address,
+                value: ethers.utils.parseEther('20'),
+            })).to.be.revertedWith("minting is paused");            
+            await expect(deplyedBeerBotClub.connect(devDude).unpauseByContract()).to.be.revertedWith("Ownable: caller is not the owner");
             await deplyedBeerBotClub.connect(creator).unpauseByContract()
-            expect(await deplyedBeerBotClub.connect(creator).isPausedByContract()).to.be.eq(false);
-
+            expect(await deplyedBeerBotClub.connect(creator).isPausedByContract()).to.be.eq(false);            
             //
             //
             // Continue minting...
-            for (let i = 0; i <= 267; i++){ // 268                
-                let BeerbotMintedID = await getIdOfMinted(somdeDudeFour);
+            for (let i = 0; i <= 267; i++){ // 268                           
+                let BeerbotMintedID = await getIdOfMinted(somdeDudeFour);                
                 checkIfIdOfMintedIsSpecial(BeerbotMintedID);
                 counter++;
             }
@@ -157,10 +194,47 @@ describe("All BeerBot can be minted and the exotics appear when they needed", ()
                 counter++;
             }
 
-            for (let i = 0; i <= 264; i++){ // 265
+            for (let i = 0; i <= 254; i++){ // 255
                 let BeerbotMintedID = await getIdOfMinted(someDudeSeven);
                 checkIfIdOfMintedIsSpecial(BeerbotMintedID);
                 counter++;
+            }
+
+            // 10 Beerbots remaining for reach 2666 BeerBots and finish firts round
+            // mint one more
+            await deplyedBeerBotClub.connect(someDudeEleven).mint(1,{
+                from: someDudeEleven.address,
+                value: ethers.utils.parseEther('20'),
+            });
+            counter++;
+
+            // 9 Beerbots remaining for reach 2666 Beerbots and finish firts round
+            // Check that max Supply wouldnt be exceeded when minting more than remaining
+            expect(await deplyedBeerBotClub.connect(creator)._totalSupply()).to.be.eq(2657);
+            console.log("2657 BeerBots reached... Check that 2666 BeerBots of second round wouldnt be exceeded\n");
+            for(let i = 10; i > 0; i--){
+                stringAmount = (20*i).toString()                                
+                // mint one by step
+                if (i > 1){
+                    await expect(deplyedBeerBotClub.connect(someDudeEleven).mint(i,{
+                        from: someDudeEleven.address,
+                        value: ethers.utils.parseEther(stringAmount),
+                    })).to.be.revertedWith("Mint less BeerBots");   
+                    // console.log("reverted, "+i)
+
+                    await deplyedBeerBotClub.connect(someDudeEleven).mint(1,{
+                        from: someDudeEleven.address,
+                        value: ethers.utils.parseEther('20'),
+                    });
+                    counter++;
+                    // console.log("minted 1 more")
+                } else{
+                    // try to mint after last beerbot was minted...
+                    await expect(deplyedBeerBotClub.connect(someDudeEleven).mint(i,{
+                        from: someDudeEleven.address,
+                        value: ethers.utils.parseEther(stringAmount),
+                    })).to.be.revertedWith("minting is paused");   
+                }
             }
 
             //
@@ -266,8 +340,8 @@ describe("All BeerBot can be minted and the exotics appear when they needed", ()
             let balanceOfDudeEleven = await deplyedBeerBotClub.connect(creator).balanceOf(someDudeEleven.address);
 
             totalBalance = balanceOfDudeOne.add(balanceOfDudeTwo).add(balanceOfDudeThree).add(balanceOfDudeFour).add(balanceOfDudeFive).add(balanceOfDudeSix).add(balanceOfDudeSeven).add(balanceOfDudeEight).add(balanceOfDudeNine).add(balanceOfDudeTen).add(balanceOfDudeEleven);
-            console.log("Checking and adding the balances of all the holders...")
-            console.log(totalBalance)            
+            console.log("Checking and adding the balances of all the holders...");
+            console.log(totalBalance);
             await expect(deplyedBeerBotClub.ownerOf(4000)).to.be.revertedWith("ERC721: invalid token ID");
             await expect(deplyedBeerBotClub.ownerOf(4001)).to.be.revertedWith("ERC721: invalid token ID");
             // console.log("almost all good");
@@ -281,7 +355,7 @@ describe("All BeerBot can be minted and the exotics appear when they needed", ()
             for (id of ids){
                 owners[String(id)] = await deplyedBeerBotClub.connect(creator).ownerOf(id);
             }
-
+            // console.log(owners);
         });
 
     });
