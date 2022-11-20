@@ -21,7 +21,7 @@ module.exports = {
       ]
     },
     bsc_testnet: {      
-      url: "https://data-seed-prebsc-1-s3.binance.org:8545",
+      url: process.env.bsc_testnet_url,
       chainId: 97,
       accounts: [
         process.env.bsc_testnet_account
