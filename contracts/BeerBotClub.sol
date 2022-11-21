@@ -202,19 +202,20 @@ contract BeerBotClub is ERC721, ERC721Royalty, Ownable, BotSelector, PaymentSpli
             uint decider;
             decider = 0;
                   
-            if (_current > 250 && (normalNumbers.length +  exoticNumbers.length) > 2666 && exoticSupply < 3){                
+            if ((_current > 250 && (normalNumbers.length +  exoticNumbers.length) > 2666 && exoticSupply == 0) || 
+                (_current > 500 && (normalNumbers.length +  exoticNumbers.length) > 2666 && exoticSupply == 1) || 
+                (_current > 750 && (normalNumbers.length +  exoticNumbers.length) > 2666 && exoticSupply == 2) || 
+                (_current > 1583 && (normalNumbers.length +  exoticNumbers.length) > 1333 && exoticSupply == 3) ||
+                (_current > 1833 && (normalNumbers.length +  exoticNumbers.length) > 1333 && exoticSupply == 4) ||
+                (_current > 2083 && (normalNumbers.length +  exoticNumbers.length) > 1333 && exoticSupply == 5) ||
+                (_current > 2916 && exoticSupply == 6) ||
+                (_current > 3166 && exoticSupply == 7) ||
+                (_current > 3416 && exoticSupply == 8)){
                 decider = getDecider(maxSupply, _current, msg.sender);
             }
 
-            if (_current > 1333 && (normalNumbers.length +  exoticNumbers.length) > 1333 && exoticSupply < 6){
-                decider = getDecider(maxSupply, _current, msg.sender);
-            }
+            randomBotId = getRandomBotId(decider, maxSupply, _current, msg.sender, normalNumbers.length, exoticNumbers.length);
 
-            if (_current > 2666 && exoticSupply < 9){
-                decider = getDecider(maxSupply, _current, msg.sender);
-            }
-
-            randomBotId = getRandomBotId(decider, maxSupply, exoticSupply, _current, msg.sender, normalNumbers.length, exoticNumbers.length);
             if (decider == 1){
                 resultNumber = exoticNumbers[randomBotId];
                 exoticNumbers[randomBotId] = exoticNumbers[exoticNumbers.length - 1];
