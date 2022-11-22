@@ -26,13 +26,13 @@ module.exports = {
       accounts: [
         process.env.bsc_testnet_account
       ]
-    }//,
-    // bsc_mainnet: {
-    //   url: "https://bsc-dataseed.binance.org/",      
-    //   chainId: 56,      
-    //   accounts: [
-    //     process.env.bsc_mainnet_account
-    //   ]
-    // }
+    },
+    bsc_mainnet: {
+      url: process.env.bsc_mainnet_url,
+      chainId: 56,      
+      accounts: [
+        process.env.bsc_mainnet_account
+      ]
+    }
   }
 };
