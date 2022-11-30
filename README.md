@@ -13,9 +13,9 @@ intract with it in explorer [https://testnet.bscscan.com/address/0xdD3Adc7C05832
 
 This contract was deployed on bnb chain.
 ```
-BNB chain tesnet Contract address = 0xe7B94abfc8F0e25DcB89985E9c4583aFb1C0F1D1
+BNB Chain Mainnet Contract address = 0xe7B94abfc8F0e25DcB89985E9c4583aFb1C0F1D1
 ```
-intract with it in explorer [https://bscscan.com/address/0xe7B94abfc8F0e25DcB89985E9c4583aFb1C0F1D1#code](https://bscscan.com/address/0xe7B94abfc8F0e25DcB89985E9c4583aFb1C0F1D1).
+intract with it in explorer [https://bscscan.com/address/0xe7B94abfc8F0e25DcB89985E9c4583aFb1C0F1D1](https://bscscan.com/address/0xe7B94abfc8F0e25DcB89985E9c4583aFb1C0F1D1).
 
 
 ### About this contract
